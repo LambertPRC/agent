@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-`main.py` is the runnable entry point and contains Windows SSL setup before invoking the agent. `agent/` defines the LangChain ReAct agent and its prompt template. `infra/openai_client/` wraps the OpenAI-compatible chat client, while `tools/weather/` provides the current example tool. Root and package `__init__.py` files contain initialization behavior. There is currently no `tests/` directory, asset tree, or packaging configuration.
+`main.py` is the runnable entry point and contains Windows SSL setup. `agent/` defines the native tool-calling agent and runtime prompt. `tools/common/` provides the shared ToolResult contract; `tools/weather/` implements Open-Meteo access. `infra/openai_client/` wraps the OpenAI-compatible client. `tests/` contains offline contract and weather tests. There is no asset tree or packaging configuration.
 
 ## Setup, Run, and Validation Commands
 
@@ -11,23 +11,27 @@ Use Python 3.9, matching the checked-in IDE configuration.
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-python -m pip install certifi httpx langchain langchain-core langchain-openai openai python-dotenv
+python -m pip install certifi httpx langchain langchain-core langchain-openai openai "pydantic>=2" python-dotenv
 python main.py
 ```
 
 `python main.py` runs the sample agent and contacts the configured OpenAI-compatible endpoint. Dependency versions are not yet declared, so update this guide if a `requirements.txt` or `pyproject.toml` is added. Validate syntax without calling external services:
 
 ```powershell
-python -m compileall main.py agent infra tools
+python -m compileall main.py agent infra tools tests
 ```
 
 ## Coding Style & Naming Conventions
 
 Follow PEP 8 with four-space indentation, imports grouped at the top, and one import per line. Use `snake_case` for modules, functions, and variables; use `PascalCase` for classes and `UPPER_SNAKE_CASE` for constants. Add type hints to public functions and keep tool functions small and deterministic. No formatter or linter is configured, so review style manually and avoid unrelated reformatting.
 
+## Agent Architecture
+
+Use `ChatPromptTemplate` with native Tool Calling. Never parse ReAct markers such as `Action:` or `Final Answer:`. Wrap tools with `standard_tool` and Pydantic input/data models; ToolResult v1 enforces (`schema_version`, `tool`, `ok`, `data`, `error`, `meta`). Keep runtime rules in the system prompt.
+
 ## Testing Guidelines
 
-No test framework or coverage target exists. Add new tests under `tests/`, name files `test_<module>.py`, and name cases `test_<behavior>`. Prefer `pytest`; mock LLM and HTTP calls so tests remain fast, deterministic, and offline. Run future tests with `python -m pytest` after declaring `pytest` as a development dependency.
+Tests use standard-library `unittest`. Name files `test_<module>.py` and cases `test_<behavior>`. Mock LLM and HTTP calls so tests stay deterministic and offline. Run all tests with `python -m unittest discover -s tests -v`. No coverage target is configured.
 
 ## Configuration & Security
 

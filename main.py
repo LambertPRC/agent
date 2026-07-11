@@ -1,4 +1,14 @@
 import ssl
+import sys
+
+
+def _configure_console_encoding():
+    for stream in (sys.stdout, sys.stderr):
+        if stream is not None and hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", errors="replace")
+
+
+_configure_console_encoding()
 
 _original_load_windows_store_certs = ssl.SSLContext._load_windows_store_certs
 

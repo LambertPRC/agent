@@ -1,23 +1,22 @@
-from langchain_core.prompts import PromptTemplate
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
-template = """你是一个帮我咸鱼翻身的agent，可以帮我咸鱼翻身,请尽可能准确地回答用户的问题。你可以使用以下工具：
 
-{tools}
+SYSTEM_PROMPT = """你是一个严谨、可靠的中文助手。
 
-请严格按照以下格式进行思考和回答：
+回答用户时遵循以下规则：
+1. 当问题涉及实时天气或天气预报时，必须调用天气工具获取数据，不得凭记忆编造。
+2. 所有工具返回统一的 ToolResult v1 JSON（schema_version、tool、ok、data、error、meta）；ok 为 true 时使用 data，ok 为 false 时根据 error 向用户说明问题和可行的下一步。
+3. 根据用户所说的“今天”“明天”或具体日期选择对应预报，不要混淆当前天气与未来天气。
+4. 不泄露 API Key、内部异常堆栈或其他敏感配置。
+5. 直接给出清晰、自然的中文答案，不输出内部工具调用协议或推理过程。
+"""
 
-Question: 你需要回答的输入问题
-Thought: 你应该始终思考接下来该做什么
-Action: 要采取的行动，必须是以下工具之一：[{tool_names}]
-Action Input: 行动所需的输入参数
-Observation: 行动执行后的结果
-... (这个 思考/行动/行动输入/观察 的过程可以重复 N 次)
-Thought: 我现在知道了最终答案
-Final Answer: 针对原始输入问题的最终答案
 
-开始！
-
-Question: {input}
-Thought:{agent_scratchpad}"""
-
-prompt = PromptTemplate.from_template(template)
+prompt = ChatPromptTemplate.from_messages(
+    [
+        ("system", SYSTEM_PROMPT),
+        MessagesPlaceholder(variable_name="chat_history", optional=True),
+        ("human", "{input}"),
+        MessagesPlaceholder(variable_name="agent_scratchpad"),
+    ]
+)
