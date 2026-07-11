@@ -35,6 +35,7 @@ agent_executor = AgentExecutor(
 )
 
 def agent_invoke(messages: list):
+    print(1)
     user_input = "\n".join(
         message.get("content", "")
         for message in messages
